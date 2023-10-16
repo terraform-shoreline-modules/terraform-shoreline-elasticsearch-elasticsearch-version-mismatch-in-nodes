@@ -1,0 +1,110 @@
+{
+  "name": "elasticsearch_version_mismatch_in_nodes",
+  "description": "This incident type occurs when there is a version mismatch between the nodes in an Elasticsearch cluster. Elasticsearch is a distributed search and analytics engine that allows for real-time search and analysis of data. When nodes within the cluster have different versions of Elasticsearch installed, it can cause issues with data indexing, querying, and retrieval. This can lead to decreased performance, data inconsistencies, and even system downtime.",
+  "params": [
+    {
+      "name": "LIST_OF_NODES",
+      "value": ""
+    },
+    {
+      "name": "NODE2",
+      "value": ""
+    },
+    {
+      "name": "ANY_NODE",
+      "value": ""
+    },
+    {
+      "name": "VERSION",
+      "value": ""
+    },
+    {
+      "name": "NODE1",
+      "value": ""
+    },
+    {
+      "name": "NODE3",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Elasticsearch Version Mismatch in Nodes\nThis incident type occurs when there is a version mismatch between the nodes in an Elasticsearch cluster. Elasticsearch is a distributed search and analytics engine that allows for real-time search and analysis of data. When nodes within the cluster have different versions of Elasticsearch installed, it can cause issues with data indexing, querying, and retrieval. This can lead to decreased performance, data inconsistencies, and even system downtime."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 1. Check Elasticsearch version on each node"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `for node in ${LIST_OF_NODES}; do curl -s -XGET http://$node:9200 | jq '.version.number'; done`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 2. Check Elasticsearch cluster health status"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET http://${ANY_NODE}:9200/_cluster/health | jq '.status'`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 3. Check Elasticsearch cluster state"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET http://${ANY_NODE}:9200/_cluster/state | jq '.metadata.cluster_uuid'`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 4. Check Elasticsearch logs for version mismatch errors"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep -r \"version mismatch\" /var/log/elasticsearch/`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Determine which version of Elasticsearch is the correct version for the cluster and ensure all nodes are running that version."
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_elasticsearch_version($NODE2, $VERSION, $NODE1, $NODE3)"
+    }
+  ]
+}
